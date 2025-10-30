@@ -1,25 +1,27 @@
 from ultralytics import YOLO
 import cv2
 import numpy as np
-import subprocess
-import time
+from config import MODEL_CONFIGS, VIDEO_CONFIGS
 
 class ObjectDetector:
-    def __init__(self, model_path='yolov8n.pt'):
+    def __init__(self):
         """
-        Inicializa o detector de objetos
-        Args:
-            model_path (str): Caminho para o modelo YOLOv8 treinado
+        Inicializa o detector de objetos usando as configurações do config.py
         """
-        self.model = YOLO(model_path)
+        self.model = YOLO(MODEL_CONFIGS['model_path'])
+        # Configura para detectar apenas pessoas e desabilita mensagens
+        self.model.predictor.args.classes = [0]  # 0 = pessoa na COCO dataset
+        self.model.predictor.args.verbose = False
+        self.conf_threshold = MODEL_CONFIGS['confidence_threshold']
+        self.device = MODEL_CONFIGS['device']
         
     def detect(self, frame):
         """
-        Realiza a detecção de objetos no frame
+        Realiza a detecção de pessoas no frame
         Args:
             frame (np.ndarray): Frame do vídeo para processar
         Returns:
-            list: Lista de detecções encontradas
+            list: Lista de detecções de pessoas
         """
         if frame is None:
             return []

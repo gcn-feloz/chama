@@ -31,13 +31,24 @@ class StreamCapture:
     def get_frame(self):
         """
         Captura e retorna o próximo frame do vídeo
+        Returns:
+            np.ndarray: Frame capturado ou None se houver erro
         """
         if not self.capture.isOpened():
             return None
             
+        # Pula frames conforme configurado
+        for _ in range(VIDEO_CONFIGS['skip_frames'] - 1):
+            self.capture.read()
+            
         ret, frame = self.capture.read()
         if not ret:
             return None
+            
+        # Redimensiona o frame para o tamanho configurado
+        frame = cv2.resize(frame, 
+                         (VIDEO_CONFIGS['frame_width'], 
+                          VIDEO_CONFIGS['frame_height']))
             
         return frame
         

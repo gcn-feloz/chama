@@ -1,10 +1,15 @@
 import time
 from datetime import datetime
+from config import ALERT_CONFIGS
 
 class AlertSystem:
     def __init__(self):
+        """
+        Inicializa o sistema de alertas
+        """
         self.active_alerts = {}
-        self.alert_timeout = 30  # segundos
+        self.alert_timeout = ALERT_CONFIGS['timeout']
+        self.min_confidence = ALERT_CONFIGS['min_confidence']
 
     def process_detections(self, detections):
         current_time = time.time()

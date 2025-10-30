@@ -3,9 +3,10 @@ from detection import ObjectDetector
 from display import DisplayManager
 from gesture_detection import GestureDetector
 from alert_system import AlertSystem
+from config import VIDEO_CONFIGS, MODEL_CONFIGS, DISPLAY_CONFIGS
 
 def main():
-    stream = StreamCapture('sua_fonte_de_video')
+    stream = StreamCapture()  # Não precisa mais passar a fonte de vídeo, pois já está em config.py
     detector = GestureDetector()
     alert_system = AlertSystem()
     display = DisplayManager()

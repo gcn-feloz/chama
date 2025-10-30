@@ -1,7 +1,46 @@
-import cv2
 from ultralytics import YOLO
+import cv2
+import numpy as np
 import subprocess
 import time
+
+class ObjectDetector:
+    def __init__(self, model_path='yolov8n.pt'):
+        """
+        Inicializa o detector de objetos
+        Args:
+            model_path (str): Caminho para o modelo YOLOv8 treinado
+        """
+        self.model = YOLO(model_path)
+        
+    def detect(self, frame):
+        """
+        Realiza a detecção de objetos no frame
+        Args:
+            frame (np.ndarray): Frame do vídeo para processar
+        Returns:
+            list: Lista de detecções encontradas
+        """
+        if frame is None:
+            return []
+            
+        results = self.model(frame)
+        detections = []
+        
+        for result in results:
+            boxes = result.boxes
+            for box in boxes:
+                x1, y1, x2, y2 = box.xyxy[0].cpu().numpy()
+                confidence = box.conf[0].cpu().numpy()
+                class_id = box.cls[0].cpu().numpy()
+                
+                detections.append({
+                    'bbox': (int(x1), int(y1), int(x2), int(y2)),
+                    'confidence': float(confidence),
+                    'class_id': int(class_id)
+                })
+                
+        return detections
 
 def get_stream_url(youtube_url: str, quality_tag="93") -> str:
     """
@@ -27,8 +66,7 @@ def run_detection(youtube_url: str):
 
     print(f"[INFO] Iniciando stream com YOLO otimizado...\n{stream_url}\n")
 
-    # YOLO mais leve
-    model = YOLO("yolov8n.pt")
+    detector = ObjectDetector()
 
     # Limita o processamento para menor carga
     cap = cv2.VideoCapture(stream_url)
@@ -55,11 +93,12 @@ def run_detection(youtube_url: str):
             # Redimensiona frame para aliviar CPU
             frame = cv2.resize(frame, (640, 360))
 
-            results = model(frame, stream=True)
-            for r in results:
-                annotated = r.plot()
-                cv2.imshow("Chama - Detecção (modo leve)", annotated)
-                break
+            detections = detector.detect(frame)
+            for detection in detections:
+                x1, y1, x2, y2 = detection['bbox']
+                cv2.rectangle(frame, (x1, y1), (x2, y2), (255, 0, 0), 2)
+
+            cv2.imshow("Chama - Detecção (modo leve)", frame)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break

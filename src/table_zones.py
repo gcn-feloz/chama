@@ -78,3 +78,36 @@ class TableZoneManager:
                        0.5,
                        (0, 255, 0),
                        2)
+                       
+        return display_frame
+        
+    def save_zones(self, filename='table_zones.json'):
+        """
+        Salva as configurações das zonas em um arquivo JSON
+        Args:
+            filename: Nome do arquivo para salvar
+        """
+        config = {
+            "tables": [
+                {
+                    "id": zone['id'],
+                    "name": zone['name'],
+                    "points": zone['points'].tolist()
+                }
+                for zone in self.zones
+            ]
+        }
+        
+        try:
+            with open(filename, 'w') as f:
+                json.dump(config, f, indent=4)
+            print(f"\nConfigurações salvas em {filename}")
+            print(f"{len(self.zones)} mesas configuradas")
+        except Exception as e:
+            print(f"Erro ao salvar configurações: {e}")
+            
+    def clear_zones(self):
+        """
+        Limpa todas as zonas configuradas
+        """
+        self.zones = []

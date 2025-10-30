@@ -1,33 +1,22 @@
 import cv2
-import yt_dlp
-from config import VIDEO_CONFIGS
+from config import CAMERA_CONFIG
 
 class StreamCapture:
     def __init__(self):
         """
-        Inicializa a captura de vídeo baseada nas configurações globais
+        Inicializa a captura de vídeo da câmera
         """
-        self.use_youtube = VIDEO_CONFIGS['use_youtube']
+        # Inicializa a captura usando o ID da câmera configurado
+        self.capture = cv2.VideoCapture(CAMERA_CONFIG['device_id'])
         
-        if self.use_youtube:
-            url = VIDEO_CONFIGS['youtube_url']
-            video_url = self._get_youtube_stream_url(url)
-            self.capture = cv2.VideoCapture(video_url)
-        else:
-            self.capture = cv2.VideoCapture(VIDEO_CONFIGS['camera_id'])
+        # Configura as propriedades da câmera
+        self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, CAMERA_CONFIG['frame_width'])
+        self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, CAMERA_CONFIG['frame_height'])
+        self.capture.set(cv2.CAP_PROP_FPS, CAMERA_CONFIG['fps'])
+        
+        if not self.capture.isOpened():
+            raise RuntimeError("Não foi possível inicializar a câmera")
     
-    def _get_youtube_stream_url(self, url):
-        """
-        Obtém a URL do stream do YouTube usando yt-dlp
-        """
-        ydl_opts = {
-            'format': 'best[ext=mp4]',
-            'quiet': True
-        }
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=False)
-            return info['url']
-
     def get_frame(self):
         """
         Captura e retorna o próximo frame do vídeo
@@ -37,18 +26,14 @@ class StreamCapture:
         if not self.capture.isOpened():
             return None
             
-        # Pula frames conforme configurado
-        for _ in range(VIDEO_CONFIGS['skip_frames'] - 1):
-            self.capture.read()
-            
         ret, frame = self.capture.read()
         if not ret:
             return None
             
         # Redimensiona o frame para o tamanho configurado
         frame = cv2.resize(frame, 
-                         (VIDEO_CONFIGS['frame_width'], 
-                          VIDEO_CONFIGS['frame_height']))
+                         (CAMERA_CONFIG['frame_width'], 
+                          CAMERA_CONFIG['frame_height']))
             
         return frame
         

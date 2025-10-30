@@ -1,5 +1,25 @@
 from ultralytics import YOLO
+import cv2
 import numpy as np
+import os
+import torch
+from config import MODEL_CONFIGS
+
+def preload_model(model_path):
+    """
+    Pré-carrega o modelo com as configurações corretas
+    Args:
+        model_path: Caminho para o arquivo do modelo
+    Returns:
+        YOLO: Modelo carregado
+    """
+    try:
+        import ultralytics.nn.tasks
+        torch.serialization.register_class(ultralytics.nn.tasks.PoseModel)
+        return YOLO(model_path, task='pose')
+    except Exception as e:
+        print(f"ERRO ao pré-carregar o modelo: {e}")
+        raise
 
 class GestureDetector:
     def __init__(self):
@@ -7,7 +27,22 @@ class GestureDetector:
         Inicializa o detector de gestos
         Utiliza o modelo YOLOv8-pose para detectar pontos-chave do corpo
         """
-        self.model = YOLO('yolov8n-pose.pt')  # Modelo específico para pose estimation
+        try:
+            # Usar o caminho absoluto do modelo
+            model_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), MODEL_CONFIGS['model_path'])
+            if not os.path.exists(model_path):
+                print(f"ERRO: Modelo não encontrado em {model_path}")
+                print("Por favor, baixe o modelo usando:")
+                print("wget https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8n-pose.pt")
+                raise FileNotFoundError(f"Modelo não encontrado: {model_path}")
+            
+            # Carregar o modelo com as configurações corretas
+            # Carregar o modelo usando a função de pré-carregamento
+            self.model = preload_model(model_path)
+            self.model.predictor.args.verbose = False  # Desabilita mensagens de detecção
+        except Exception as e:
+            print(f"ERRO ao carregar o modelo: {e}")
+            raise
         self.model.predictor.args.verbose = False  # Desabilita mensagens
         self.raised_hand_threshold = 0.3  # Diferença vertical mínima para considerar braço levantado
         

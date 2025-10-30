@@ -14,11 +14,11 @@ class GestureDetector:
             boxes = result.boxes
             for box in boxes:
                 if box.cls[0] == 0:  # pessoa
-                    x1, y1, x2, y2 = box.xyxy[0]
-                    conf = box.conf[0]
+                    x1, y1, x2, y2 = box.xyxy[0].cpu().numpy()
+                    conf = float(box.conf[0].cpu().numpy())
                     if self._is_hand_raised(box):
                         detections.append({
-                            'bbox': (x1, y1, x2, y2),
+                            'bbox': (int(x1), int(y1), int(x2), int(y2)),
                             'confidence': conf
                         })
         
